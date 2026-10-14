@@ -13,11 +13,45 @@
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
+        /* Style untuk input PIN agar terlihat estetik */
+        .pin-input {
+            letter-spacing: 0.5em;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex justify-center">
     
-    <div class="w-full max-w-md p-6 pb-20">
+    <!-- ==================== LAYAR KUNCI (PIN) ==================== -->
+    <div id="pinScreen" class="w-full max-w-md p-6 flex flex-col items-center justify-center min-h-screen z-50 bg-slate-900 absolute inset-0">
+        
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-[320px] flex flex-col items-center text-center">
+            <div class="mb-6 bg-slate-900 p-4 rounded-full border border-slate-600">
+                <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+            </div>
+            
+            <h2 id="pinTitle" class="text-lg font-bold mb-2 text-slate-200">Verifikasi Keamanan</h2>
+            <p id="pinSubtitle" class="text-xs text-slate-400 mb-6">Masukkan PIN Anda</p>
+            
+            <!-- Menggunakan inputmode numeric untuk memunculkan numpad di HP -->
+            <input type="password" id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" 
+                class="pin-input bg-slate-900 border border-slate-600 text-white text-2xl rounded-xl p-3 w-3/4 outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition"
+                placeholder="••••">
+            
+            <p id="pinError" class="text-red-400 text-xs mt-3 h-4"></p>
+            
+            <button id="pinBtn" class="mt-4 w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition">
+                Masuk
+            </button>
+        </div>
+        
+    </div>
+
+    <!-- ==================== APLIKASI UTAMA (Tersembunyi Awalnya) ==================== -->
+    <div id="mainApp" class="w-full max-w-md p-6 pb-20 hidden">
+        
         <!-- Header & Title -->
         <div class="mb-8 mt-4">
             <input type="text" id="appTitle" value="Track Portfolio And Asset Updates" 
@@ -29,12 +63,9 @@
         <div class="mb-8">
             <div class="flex items-center gap-2 mb-1">
                 <p class="text-slate-400 text-sm font-medium">Net Worth (IDR)</p>
-                <!-- Ikon Mata (Toggle Visibility) -->
+                <!-- Ikon Mata -->
                 <button onclick="toggleVisibility()" class="text-slate-400 hover:text-white transition focus:outline-none" id="eyeIconContainer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 </button>
             </div>
             <h1 class="text-4xl font-bold tracking-tight text-white" id="netWorthDisplay">0</h1>
@@ -48,7 +79,6 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <h2 class="font-semibold text-lg">Investasi Emas</h2>
-                        <!-- Label harga akan diperbarui otomatis oleh fungsi Fetch -->
                         <p class="text-[11px] text-emerald-300 mt-1" id="goldPriceLabel">Mengambil harga Logamspot...</p>
                     </div>
                     <div class="text-right">
@@ -126,13 +156,66 @@
 
     <!-- LOGIKA JAVASCRIPT -->
     <script>
-        // Nilai Default jika web Logamspot gagal ditarik
-        let GOLD_PRICE_PER_GRAM = 2445000; 
-        
-        let stocks = [
-            { id: 1, name: 'BBRI', price: 0, lot: 0 }
-        ];
+        // === 0. SISTEM KEAMANAN (PIN) ===
+        function checkSecurityPin() {
+            const savedPin = localStorage.getItem('appSecurityPin');
+            const pinTitle = document.getElementById('pinTitle');
+            const pinSubtitle = document.getElementById('pinSubtitle');
+            const pinInput = document.getElementById('pinInput');
+            const pinBtn = document.getElementById('pinBtn');
+            const pinError = document.getElementById('pinError');
 
+            // Tambahkan event listener Enter untuk input PIN
+            pinInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    pinBtn.click();
+                }
+            });
+
+            if (savedPin) {
+                // Skenario 1: PIN Sudah Ada
+                pinTitle.innerText = "Masukkan PIN";
+                pinSubtitle.innerText = "Sistem terkunci demi privasi Anda";
+                pinBtn.innerText = "Buka Kunci";
+                
+                pinBtn.onclick = function() {
+                    if (pinInput.value === savedPin) {
+                        unlockApp();
+                    } else {
+                        pinError.innerText = "PIN Salah! Coba lagi.";
+                        pinInput.value = ''; // Kosongkan field
+                    }
+                };
+            } else {
+                // Skenario 2: Belum Pernah Buat PIN
+                pinTitle.innerText = "Buat PIN Baru";
+                pinSubtitle.innerText = "Tentukan 4 digit angka untuk mengunci aset";
+                pinBtn.innerText = "Simpan PIN & Masuk";
+                
+                pinBtn.onclick = function() {
+                    if (pinInput.value.length >= 4) {
+                        localStorage.setItem('appSecurityPin', pinInput.value);
+                        unlockApp();
+                    } else {
+                        pinError.innerText = "PIN harus minimal 4 digit!";
+                    }
+                };
+            }
+        }
+
+        // Buka Kunci Aplikasi
+        function unlockApp() {
+            document.getElementById('pinScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            // Mulai muat data aset setelah kunci terbuka
+            loadData();
+        }
+
+
+        // === VARIABEL GLOBAL ASET ===
+        let GOLD_PRICE_PER_GRAM = 2445000; 
+        let stocks = [{ id: 1, name: 'BBRI', price: 0, lot: 0 }];
         let reksaUpdateDateStr = "";
         let isVisible = true;
 
@@ -143,7 +226,6 @@
         async function fetchLiveGoldPrice() {
             try {
                 const targetUrl = 'https://logamspot.id/harga/emas-galeri-24-1-gram';
-                // Gunakan CORS Proxy agar tidak diblokir browser saat ditarik dari Github Pages
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
                 
                 const response = await fetch(proxyUrl);
@@ -151,7 +233,6 @@
                     const data = await response.json();
                     const html = data.contents;
                     
-                    // Regex untuk menemukan pola harga "Rp X.XXX.XXX" di HTML web tersebut
                     const match = html.match(/Rp\s?([0-9]{1,2}(?:\.[0-9]{3})+)/);
                     if(match && match[1]) {
                         const priceNum = parseInt(match[1].replace(/\./g, ''));
@@ -163,18 +244,15 @@
                         }
                     }
                 }
-                // Jika regex gagal / format web logamspot berubah
                 document.getElementById('goldPriceLabel').innerText = `Harga Manual: Rp${formatRupiah(GOLD_PRICE_PER_GRAM)}/gr`;
             } catch (e) {
-                console.log("Gagal menarik data", e);
                 document.getElementById('goldPriceLabel').innerText = `Harga Offline: Rp${formatRupiah(GOLD_PRICE_PER_GRAM)}/gr`;
             }
         }
 
-        // === 2. FITUR SENSOR (MODE PRIVASI) ===
+        // === 2. FITUR SENSOR ===
         function toggleVisibility() {
             isVisible = !isVisible;
-            
             document.getElementById('eyeIconContainer').innerHTML = isVisible ? iconOpen : iconClosed;
             
             const inputType = isVisible ? 'number' : 'password';
@@ -190,7 +268,7 @@
             return new Intl.NumberFormat('id-ID').format(number);
         }
 
-        // === 3. FITUR HARI & TANGGAL RETURN REKSADANA ===
+        // === 3. FITUR TANGGAL REKSADANA ===
         function updateReksaDate() {
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -203,11 +281,10 @@
             saveData();
         }
 
-        // === 4. FITUR SAHAM (RENDER & INPUT FIX) ===
+        // === 4. FITUR SAHAM ===
         function renderStocks() {
             const container = document.getElementById('stockContainer');
             container.innerHTML = '';
-            
             const inputType = isVisible ? 'number' : 'password';
 
             stocks.forEach(stock => {
@@ -218,7 +295,6 @@
                 div.className = 'bg-slate-900 rounded-xl p-3 border border-slate-700';
                 div.id = `stock-card-${stock.id}`;
                 
-                // onfocus="this.select()" adalah kunci agar input angka normal dan mulus diketik!
                 div.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
                         <input type="text" value="${stock.name}" 
@@ -254,24 +330,20 @@
                 `;
                 container.appendChild(div);
             });
-            
             calculateTotals();
         }
 
-        // Memperbarui nama saham (tanpa merender ulang seluruh kolom)
         function updateStockName(id, value) {
             const stock = stocks.find(s => s.id === id);
             if (stock) stock.name = value;
             saveData();
         }
 
-        // Memperbarui harga/lot di DOM secara langsung tanpa me-refresh kotak (menghilangkan bug cursor hilang)
         function updateStockData(id, field, value) {
             const stock = stocks.find(s => s.id === id);
             if (stock) {
                 stock[field] = parseFloat(value) || 0;
                 
-                // Ubah text total per-saham tanpa destroy input element
                 const totalRupiah = (stock.price || 0) * (stock.lot || 0) * 100;
                 const totalEl = document.getElementById(`stock-total-${stock.id}`);
                 if (totalEl) {
@@ -295,7 +367,7 @@
             saveData();
         }
 
-        // === 5. KALKULASI UTAMA & PENYIMPANAN ===
+        // === 5. KALKULASI & STORAGE UTAMA ===
         function calculateTotals() {
             const goldGrams = parseFloat(document.getElementById('goldGrams').value) || 0;
             const goldTotal = goldGrams * GOLD_PRICE_PER_GRAM;
@@ -322,7 +394,6 @@
                 reksaUpdateDate: reksaUpdateDateStr,
                 stocksData: stocks
             };
-            // Menggunakan Storage Key V7 karena arsitektur JSON berubah
             localStorage.setItem('investmentDataV7', JSON.stringify(data));
         }
 
@@ -345,13 +416,11 @@
                 }
             }
             renderStocks(); 
-            
-            // Tarik harga emas terbaru dari Logamspot saat web dibuka
             fetchLiveGoldPrice();
         }
 
-        // Trigger inisialisasi awal
-        window.onload = loadData;
+        // TRIGGER START: Cek PIN terlebih dahulu, JANGAN load data sebelum PIN beres
+        window.onload = checkSecurityPin;
     </script>
 </body>
 </html>
