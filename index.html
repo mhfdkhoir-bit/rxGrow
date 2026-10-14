@@ -8,12 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Menghilangkan panah atas/bawah bawaan browser pada input number */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
-        /* Style untuk input PIN agar terlihat estetik */
         .pin-input {
             letter-spacing: 0.5em;
             text-align: center;
@@ -35,7 +33,6 @@
             <h2 id="pinTitle" class="text-lg font-bold mb-2 text-zinc-100">Verifikasi Keamanan</h2>
             <p id="pinSubtitle" class="text-xs text-zinc-400 mb-6">Masukkan PIN Anda</p>
             
-            <!-- Menggunakan inputmode numeric untuk memunculkan numpad di HP -->
             <input type="password" id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" 
                 class="pin-input bg-zinc-950 border border-zinc-700 text-zinc-100 text-2xl rounded-xl p-3 w-3/4 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
                 placeholder="••••">
@@ -63,7 +60,6 @@
         <div class="mb-8">
             <div class="flex items-center gap-2 mb-1">
                 <p class="text-zinc-400 text-sm font-medium">Net Worth (IDR)</p>
-                <!-- Ikon Mata -->
                 <button onclick="toggleVisibility()" class="text-zinc-500 hover:text-zinc-200 transition-colors focus:outline-none" id="eyeIconContainer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 </button>
@@ -78,7 +74,6 @@
             <div class="bg-zinc-900 p-5 rounded-2xl shadow-xl shadow-black/40 border border-zinc-800/60">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        <!-- Revisi Judul: Emas -->
                         <h2 class="font-semibold text-lg text-zinc-100">Emas</h2>
                         <p class="text-[11px] text-zinc-400 mt-1" id="goldPriceLabel">Mengambil data Logamspot...</p>
                     </div>
@@ -106,7 +101,6 @@
                         <h3 class="font-bold text-lg text-sky-400 drop-shadow-sm" id="reksaTotalDisplay">0</h3>
                     </div>
                 </div>
-                <!-- Pemisahan Modal dan Return -->
                 <div class="mt-4 flex gap-3">
                     <div class="flex-1 bg-zinc-950 rounded-xl p-2.5 border border-zinc-800 shadow-inner">
                         <label class="block text-[10px] font-medium text-zinc-500 mb-1 px-1">Modal Investasi</label>
@@ -122,4 +116,314 @@
                         <div class="flex items-center">
                             <span class="text-sm text-zinc-500 px-1">Rp</span>
                             <input type="number" id="reksaReturn" value="0" onfocus="this.select()"
-                                class="bg-transparent text-right
+                                class="bg-transparent text-right w-full outline-none font-semibold text-sky-300"
+                                oninput="updateReksaDate()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Investasi Saham -->
+            <div class="bg-zinc-900 p-5 rounded-2xl shadow-xl shadow-black/40 border border-zinc-800/60">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="font-semibold text-lg text-zinc-100">Saham (IDX)</h2>
+                        <p class="text-[11px] text-zinc-400 mt-1">1 Lot = 100 Lembar</p>
+                    </div>
+                    <div class="text-right">
+                        <h3 class="font-bold text-lg text-indigo-400 drop-shadow-sm" id="sahamTotalDisplay">0</h3>
+                    </div>
+                </div>
+                
+                <div id="stockContainer" class="space-y-3"></div>
+
+                <button onclick="addStock()" class="mt-5 text-sm font-medium text-indigo-400 hover:text-indigo-300 hover:bg-zinc-800/50 flex items-center w-full justify-center bg-zinc-950 py-3 rounded-xl border border-zinc-700 border-dashed transition-all">
+                    + Tambah Aset Saham
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- LOGIKA JAVASCRIPT -->
+    <script>
+        // === 0. SISTEM KEAMANAN (PIN) MENGGUNAKAN KEY BARU V2 ===
+        function checkSecurityPin() {
+            // PERHATIKAN: Key diubah menjadi 'appSecurityPinV2' agar PIN lama otomatis hangus
+            const savedPin = localStorage.getItem('appSecurityPinV2');
+            const pinTitle = document.getElementById('pinTitle');
+            const pinSubtitle = document.getElementById('pinSubtitle');
+            const pinInput = document.getElementById('pinInput');
+            const pinBtn = document.getElementById('pinBtn');
+            const pinError = document.getElementById('pinError');
+
+            pinInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    pinBtn.click();
+                }
+            });
+
+            if (savedPin) {
+                pinTitle.innerText = "Masukkan PIN";
+                pinSubtitle.innerText = "Sistem terkunci demi privasi Anda";
+                pinBtn.innerText = "Buka Kunci";
+                
+                pinBtn.onclick = function() {
+                    if (pinInput.value === savedPin) {
+                        unlockApp();
+                    } else {
+                        pinError.innerText = "PIN Salah! Coba lagi.";
+                        pinInput.value = ''; 
+                    }
+                };
+            } else {
+                pinTitle.innerText = "Buat PIN Baru";
+                pinSubtitle.innerText = "Tentukan 4 digit angka untuk mengunci aset";
+                pinBtn.innerText = "Simpan PIN & Masuk";
+                
+                pinBtn.onclick = function() {
+                    if (pinInput.value.length >= 4) {
+                        localStorage.setItem('appSecurityPinV2', pinInput.value);
+                        unlockApp();
+                    } else {
+                        pinError.innerText = "PIN harus minimal 4 digit!";
+                    }
+                };
+            }
+        }
+
+        function unlockApp() {
+            document.getElementById('pinScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            loadData();
+        }
+
+        // === VARIABEL GLOBAL ASET ===
+        let GOLD_PRICE_PER_GRAM = 2359000; 
+        let stocks = [{ id: 1, name: 'BBRI', price: 0, lot: 0 }];
+        let reksaUpdateDateStr = "";
+        let isVisible = true;
+
+        const iconOpen = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
+        const iconClosed = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>`;
+
+        // === 1. FITUR TARIK HARGA EMAS ===
+        async function fetchLiveGoldPrice() {
+            try {
+                const targetUrl = 'https://logamspot.id/harga/emas-galeri-24-1-gram';
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                if(response.ok) {
+                    const data = await response.json();
+                    const html = data.contents;
+                    
+                    const searchArea = html.toLowerCase();
+                    let startIndex = searchArea.indexOf('buyback');
+                    if (startIndex === -1) startIndex = searchArea.indexOf('harga beli');
+                    
+                    let priceFound = false;
+
+                    if (startIndex !== -1) {
+                        const substring = html.substring(startIndex, startIndex + 500); 
+                        const match = substring.match(/rp\s?([0-9]{1,2}(?:\.[0-9]{3})+)/i);
+                        
+                        if(match && match[1]) {
+                            const priceNum = parseInt(match[1].replace(/\./g, ''));
+                            if(priceNum > 1000000) { 
+                                GOLD_PRICE_PER_GRAM = priceNum;
+                                document.getElementById('goldPriceLabel').innerText = `Buyback Logamspot: Rp${formatRupiah(priceNum)}/gr`;
+                                calculateTotals();
+                                priceFound = true;
+                            }
+                        }
+                    }
+                    
+                    if(!priceFound) {
+                        document.getElementById('goldPriceLabel').innerText = `Estimasi Buyback: Rp${formatRupiah(GOLD_PRICE_PER_GRAM)}/gr`;
+                    }
+                } else {
+                    document.getElementById('goldPriceLabel').innerText = `Estimasi Buyback: Rp${formatRupiah(GOLD_PRICE_PER_GRAM)}/gr`;
+                }
+            } catch (e) {
+                document.getElementById('goldPriceLabel').innerText = `Offline (Estimasi Buyback): Rp${formatRupiah(GOLD_PRICE_PER_GRAM)}/gr`;
+            }
+        }
+
+        // === 2. FITUR SENSOR ===
+        function toggleVisibility() {
+            isVisible = !isVisible;
+            document.getElementById('eyeIconContainer').innerHTML = isVisible ? iconOpen : iconClosed;
+            
+            const inputType = isVisible ? 'number' : 'password';
+            document.getElementById('goldGrams').type = inputType;
+            document.getElementById('reksaModal').type = inputType;
+            document.getElementById('reksaReturn').type = inputType;
+
+            renderStocks();
+            calculateTotals();
+        }
+
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID').format(number);
+        }
+
+        // === 3. FITUR TANGGAL REKSADANA ===
+        function updateReksaDate() {
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const d = new Date();
+            
+            reksaUpdateDateStr = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+            document.getElementById('reksaDateDisplay').innerText = `Return Update: ${reksaUpdateDateStr}`;
+            
+            calculateTotals();
+            saveData();
+        }
+
+        // === 4. FITUR SAHAM ===
+        function renderStocks() {
+            const container = document.getElementById('stockContainer');
+            container.innerHTML = '';
+            const inputType = isVisible ? 'number' : 'password';
+
+            stocks.forEach(stock => {
+                const totalRupiah = (stock.price || 0) * (stock.lot || 0) * 100;
+                const displayTotal = isVisible ? `Rp ${formatRupiah(totalRupiah)}` : '••••••';
+
+                const div = document.createElement('div');
+                div.className = 'bg-zinc-950 rounded-xl p-3 border border-zinc-800/60 shadow-inner';
+                div.id = `stock-card-${stock.id}`;
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <input type="text" value="${stock.name}" 
+                            oninput="updateStockName(${stock.id}, this.value)" 
+                            onfocus="this.select()"
+                            placeholder="KODE"
+                            class="bg-transparent font-bold text-zinc-200 uppercase w-24 outline-none border-b border-zinc-700 focus:border-indigo-500 transition-colors">
+                        <button onclick="removeStock(${stock.id})" class="text-zinc-600 hover:text-rose-500 text-lg font-bold px-2 transition-colors">&times;</button>
+                    </div>
+                    
+                    <div class="flex gap-3 mb-2">
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-zinc-500 mb-1">Harga/Lembar (Rp)</label>
+                            <input type="${inputType}" value="${stock.price === 0 ? '' : stock.price}" 
+                                oninput="updateStockData(${stock.id}, 'price', this.value)" 
+                                onfocus="this.select()"
+                                placeholder="0"
+                                class="w-full bg-zinc-900 rounded-lg p-1.5 text-sm text-right text-zinc-100 outline-none border border-transparent focus:border-zinc-700 transition-colors">
+                        </div>
+                        <div class="w-20">
+                            <label class="block text-[10px] text-zinc-500 mb-1">Jml Lot</label>
+                            <input type="${inputType}" value="${stock.lot === 0 ? '' : stock.lot}" 
+                                oninput="updateStockData(${stock.id}, 'lot', this.value)" 
+                                onfocus="this.select()"
+                                placeholder="0"
+                                class="w-full bg-zinc-900 rounded-lg p-1.5 text-sm text-right text-zinc-100 outline-none border border-transparent focus:border-zinc-700 transition-colors">
+                        </div>
+                    </div>
+                    
+                    <div class="text-right text-sm font-semibold text-indigo-400 mt-1 drop-shadow-sm" id="stock-total-${stock.id}">
+                        ${displayTotal}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            calculateTotals();
+        }
+
+        function updateStockName(id, value) {
+            const stock = stocks.find(s => s.id === id);
+            if (stock) stock.name = value;
+            saveData();
+        }
+
+        function updateStockData(id, field, value) {
+            const stock = stocks.find(s => s.id === id);
+            if (stock) {
+                stock[field] = parseFloat(value) || 0;
+                
+                const totalRupiah = (stock.price || 0) * (stock.lot || 0) * 100;
+                const totalEl = document.getElementById(`stock-total-${stock.id}`);
+                if (totalEl) {
+                    totalEl.innerText = isVisible ? `Rp ${formatRupiah(totalRupiah)}` : '••••••';
+                }
+                
+                calculateTotals();
+                saveData();
+            }
+        }
+
+        function addStock() {
+            stocks.push({ id: Date.now(), name: 'KODE', price: 0, lot: 0 });
+            renderStocks();
+            saveData();
+        }
+
+        function removeStock(id) {
+            stocks = stocks.filter(s => s.id !== id);
+            renderStocks();
+            saveData();
+        }
+
+        // === 5. KALKULASI & STORAGE UTAMA MENGGUNAKAN KEY BARU V8 ===
+        function calculateTotals() {
+            const goldGrams = parseFloat(document.getElementById('goldGrams').value) || 0;
+            const goldTotal = goldGrams * GOLD_PRICE_PER_GRAM;
+            document.getElementById('goldTotalDisplay').innerText = isVisible ? formatRupiah(goldTotal) : '••••••';
+
+            const reksaModal = parseFloat(document.getElementById('reksaModal').value) || 0;
+            const reksaReturn = parseFloat(document.getElementById('reksaReturn').value) || 0;
+            const reksaTotal = reksaModal + reksaReturn;
+            document.getElementById('reksaTotalDisplay').innerText = isVisible ? formatRupiah(reksaTotal) : '••••••';
+
+            const sahamTotal = stocks.reduce((sum, stock) => sum + ((stock.price || 0) * (stock.lot || 0) * 100), 0);
+            document.getElementById('sahamTotalDisplay').innerText = isVisible ? formatRupiah(sahamTotal) : '••••••';
+
+            const netWorth = goldTotal + reksaTotal + sahamTotal;
+            document.getElementById('netWorthDisplay').innerText = isVisible ? formatRupiah(netWorth) : '••••••••••';
+        }
+
+        function saveData() {
+            const data = {
+                title: document.getElementById('appTitle').value,
+                gold: document.getElementById('goldGrams').value,
+                reksaModal: document.getElementById('reksaModal').value,
+                reksaReturn: document.getElementById('reksaReturn').value,
+                reksaUpdateDate: reksaUpdateDateStr,
+                stocksData: stocks
+            };
+            // PERHATIKAN: Data di-save ke slot baru V8
+            localStorage.setItem('investmentDataV8', JSON.stringify(data));
+        }
+
+        function loadData() {
+            // PERHATIKAN: Memuat dari slot baru V8 (sehingga angka lama terhapus total)
+            const savedData = localStorage.getItem('investmentDataV8');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                document.getElementById('appTitle').value = data.title || "Track Portfolio And Asset Updates";
+                document.getElementById('goldGrams').value = data.gold || '';
+                document.getElementById('reksaModal').value = data.reksaModal || '';
+                document.getElementById('reksaReturn').value = data.reksaReturn || '';
+                
+                reksaUpdateDateStr = data.reksaUpdateDate || '';
+                if(reksaUpdateDateStr) {
+                    document.getElementById('reksaDateDisplay').innerText = `Return Update: ${reksaUpdateDateStr}`;
+                }
+
+                if(data.stocksData && Array.isArray(data.stocksData) && data.stocksData.length > 0) {
+                    stocks = data.stocksData;
+                }
+            }
+            renderStocks(); 
+            fetchLiveGoldPrice();
+        }
+
+        // TRIGGER START
+        window.onload = checkSecurityPin;
+    </script>
+</body>
+</html>
