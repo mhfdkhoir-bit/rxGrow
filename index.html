@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* Menghilangkan panah atas/bawah bawaan browser pada input number */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
@@ -47,7 +48,8 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <h2 class="font-semibold text-lg">Investasi Emas</h2>
-                        <p class="text-xs text-slate-400 mt-1">Harga Jual Pegadaian: Rp2.445.000/gr</p>
+                        <!-- Label harga akan diperbarui otomatis oleh fungsi Fetch -->
+                        <p class="text-[11px] text-emerald-300 mt-1" id="goldPriceLabel">Mengambil harga Logamspot...</p>
                     </div>
                     <div class="text-right">
                         <h3 class="font-bold text-lg text-emerald-400" id="goldTotalDisplay">0</h3>
@@ -55,9 +57,9 @@
                 </div>
                 <div class="mt-4 flex items-center bg-slate-900 rounded-lg p-2 border border-slate-700">
                     <span class="text-sm text-slate-400 px-2">Total Gram:</span>
-                    <input type="number" id="goldGrams" value="0" step="0.01"
+                    <input type="number" id="goldGrams" value="0" step="0.01" onfocus="this.select()"
                         class="bg-transparent text-right w-full outline-none font-semibold text-white"
-                        oninput="calculateTotals()">
+                        oninput="calculateTotals(); saveData();">
                     <span class="text-sm text-slate-400 px-2">gr</span>
                 </div>
             </div>
@@ -67,17 +69,32 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <h2 class="font-semibold text-lg">Reksadana Pasar Uang</h2>
-                        <p class="text-xs text-slate-400 mt-1">Portofolio Likuid</p>
+                        <p class="text-[11px] text-slate-400 mt-1" id="reksaDateDisplay">Return Update: -</p>
                     </div>
                     <div class="text-right">
                         <h3 class="font-bold text-lg text-blue-400" id="reksaTotalDisplay">0</h3>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center bg-slate-900 rounded-lg p-2 border border-slate-700">
-                    <span class="text-sm text-slate-400 px-2">Rp</span>
-                    <input type="number" id="reksaValue" value="0"
-                        class="bg-transparent text-right w-full outline-none font-semibold text-white"
-                        oninput="calculateTotals()">
+                <!-- Pemisahan Modal dan Return -->
+                <div class="mt-4 flex gap-3">
+                    <div class="flex-1 bg-slate-900 rounded-lg p-2 border border-slate-700">
+                        <label class="block text-[10px] text-slate-500 mb-1 px-1">Modal Investasi</label>
+                        <div class="flex items-center">
+                            <span class="text-sm text-slate-500 px-1">Rp</span>
+                            <input type="number" id="reksaModal" value="0" onfocus="this.select()"
+                                class="bg-transparent text-right w-full outline-none font-semibold text-white"
+                                oninput="calculateTotals(); saveData();">
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-slate-900 rounded-lg p-2 border border-slate-700">
+                        <label class="block text-[10px] text-slate-500 mb-1 px-1">Return (+ / -)</label>
+                        <div class="flex items-center">
+                            <span class="text-sm text-slate-500 px-1">Rp</span>
+                            <input type="number" id="reksaReturn" value="0" onfocus="this.select()"
+                                class="bg-transparent text-right w-full outline-none font-semibold text-blue-300"
+                                oninput="updateReksaDate()">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -86,7 +103,7 @@
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <h2 class="font-semibold text-lg">Investasi Saham (IDX)</h2>
-                        <p class="text-xs text-slate-400 mt-1">1 Lot = 100 Lembar</p>
+                        <p class="text-[11px] text-slate-400 mt-1">1 Lot = 100 Lembar</p>
                     </div>
                     <div class="text-right">
                         <h3 class="font-bold text-lg text-purple-400" id="sahamTotalDisplay">0</h3>
@@ -109,31 +126,62 @@
 
     <!-- LOGIKA JAVASCRIPT -->
     <script>
-        const GOLD_PRICE_PER_GRAM = 2445000;
+        // Nilai Default jika web Logamspot gagal ditarik
+        let GOLD_PRICE_PER_GRAM = 2445000; 
         
         let stocks = [
-            { id: 1, name: 'BBRI', price: 4900, lot: 10 },
-            { id: 2, name: 'BBCA', price: 10400, lot: 5 }
+            { id: 1, name: 'BBRI', price: 0, lot: 0 }
         ];
 
-        // State untuk fitur mode privasi
+        let reksaUpdateDateStr = "";
         let isVisible = true;
 
         const iconOpen = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
         const iconClosed = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>`;
 
+        // === 1. FITUR TARIK HARGA EMAS LOGAMSPOT ===
+        async function fetchLiveGoldPrice() {
+            try {
+                const targetUrl = 'https://logamspot.id/harga/emas-galeri-24-1-gram';
+                // Gunakan CORS Proxy agar tidak diblokir browser saat ditarik dari Github Pages
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                if(response.ok) {
+                    const data = await response.json();
+                    const html = data.contents;
+                    
+                    // Regex untuk menemukan pola harga "Rp X.XXX.XXX" di HTML web tersebut
+                    const match = html.match(/Rp\s?([0-9]{1,2}(?:\.[0-9]{3})+)/);
+                    if(match && match[1]) {
+                        const priceNum = parseInt(match[1].replace(/\./g, ''));
+                        if(priceNum > 1000000) { 
+                            GOLD_PRICE_PER_GRAM = priceNum;
+                            document.getElementById('goldPriceLabel').innerText = `Logamspot: Rp${formatRupiah(priceNum)}/gr`;
+                            calculateTotals();
+                            return;
+                        }
+                    }
+                }
+                // Jika regex gagal / format web logamspot berubah
+                document.getElementById('goldPriceLabel').innerText = `Harga Manual: Rp${formatRupiah(GOLD_PRICE_PER_GRAM)}/gr`;
+            } catch (e) {
+                console.log("Gagal menarik data", e);
+                document.getElementById('goldPriceLabel').innerText = `Harga Offline: Rp${formatRupiah(GOLD_PRICE_PER_GRAM)}/gr`;
+            }
+        }
+
+        // === 2. FITUR SENSOR (MODE PRIVASI) ===
         function toggleVisibility() {
             isVisible = !isVisible;
             
-            // Ubah Ikon
             document.getElementById('eyeIconContainer').innerHTML = isVisible ? iconOpen : iconClosed;
             
-            // Ubah tipe input form statis (emas & reksa) 
             const inputType = isVisible ? 'number' : 'password';
             document.getElementById('goldGrams').type = inputType;
-            document.getElementById('reksaValue').type = inputType;
+            document.getElementById('reksaModal').type = inputType;
+            document.getElementById('reksaReturn').type = inputType;
 
-            // Render ulang komponen saham & total angka
             renderStocks();
             calculateTotals();
         }
@@ -142,7 +190,20 @@
             return new Intl.NumberFormat('id-ID').format(number);
         }
 
-        // Fungsi render data saham
+        // === 3. FITUR HARI & TANGGAL RETURN REKSADANA ===
+        function updateReksaDate() {
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const d = new Date();
+            
+            reksaUpdateDateStr = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+            document.getElementById('reksaDateDisplay').innerText = `Return Update: ${reksaUpdateDateStr}`;
+            
+            calculateTotals();
+            saveData();
+        }
+
+        // === 4. FITUR SAHAM (RENDER & INPUT FIX) ===
         function renderStocks() {
             const container = document.getElementById('stockContainer');
             container.innerHTML = '';
@@ -155,11 +216,14 @@
 
                 const div = document.createElement('div');
                 div.className = 'bg-slate-900 rounded-xl p-3 border border-slate-700';
+                div.id = `stock-card-${stock.id}`;
                 
+                // onfocus="this.select()" adalah kunci agar input angka normal dan mulus diketik!
                 div.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
                         <input type="text" value="${stock.name}" 
-                            oninput="updateStockData(${stock.id}, 'name', this.value)" 
+                            oninput="updateStockName(${stock.id}, this.value)" 
+                            onfocus="this.select()"
                             placeholder="KODE"
                             class="bg-transparent font-bold text-slate-200 uppercase w-24 outline-none border-b border-slate-600 focus:border-purple-400">
                         <button onclick="removeStock(${stock.id})" class="text-slate-500 hover:text-red-400 text-lg font-bold px-2">&times;</button>
@@ -168,44 +232,54 @@
                     <div class="flex gap-3 mb-2">
                         <div class="flex-1">
                             <label class="block text-[10px] text-slate-500 mb-1">Harga/Lembar (Rp)</label>
-                            <input type="${inputType}" value="${stock.price || ''}" 
+                            <input type="${inputType}" value="${stock.price === 0 ? '' : stock.price}" 
                                 oninput="updateStockData(${stock.id}, 'price', this.value)" 
+                                onfocus="this.select()"
                                 placeholder="0"
                                 class="w-full bg-slate-800 rounded p-1.5 text-sm text-right text-white outline-none focus:ring-1 focus:ring-slate-500">
                         </div>
                         <div class="w-20">
                             <label class="block text-[10px] text-slate-500 mb-1">Jml Lot</label>
-                            <input type="${inputType}" value="${stock.lot || ''}" 
+                            <input type="${inputType}" value="${stock.lot === 0 ? '' : stock.lot}" 
                                 oninput="updateStockData(${stock.id}, 'lot', this.value)" 
+                                onfocus="this.select()"
                                 placeholder="0"
                                 class="w-full bg-slate-800 rounded p-1.5 text-sm text-right text-white outline-none focus:ring-1 focus:ring-slate-500">
                         </div>
                     </div>
                     
-                    <div class="text-right text-sm font-semibold text-purple-300 mt-1">
+                    <div class="text-right text-sm font-semibold text-purple-300 mt-1" id="stock-total-${stock.id}">
                         ${displayTotal}
                     </div>
                 `;
                 container.appendChild(div);
             });
             
-            // Panggil calculateTotals agar data atas juga ikut direfresh
             calculateTotals();
         }
 
+        // Memperbarui nama saham (tanpa merender ulang seluruh kolom)
+        function updateStockName(id, value) {
+            const stock = stocks.find(s => s.id === id);
+            if (stock) stock.name = value;
+            saveData();
+        }
+
+        // Memperbarui harga/lot di DOM secara langsung tanpa me-refresh kotak (menghilangkan bug cursor hilang)
         function updateStockData(id, field, value) {
             const stock = stocks.find(s => s.id === id);
             if (stock) {
-                if (field === 'name') {
-                    stock.name = value;
-                } else {
-                    stock[field] = parseFloat(value) || 0;
+                stock[field] = parseFloat(value) || 0;
+                
+                // Ubah text total per-saham tanpa destroy input element
+                const totalRupiah = (stock.price || 0) * (stock.lot || 0) * 100;
+                const totalEl = document.getElementById(`stock-total-${stock.id}`);
+                if (totalEl) {
+                    totalEl.innerText = isVisible ? `Rp ${formatRupiah(totalRupiah)}` : '••••••';
                 }
-            }
-            if (field !== 'name') {
-                renderStocks(); 
-            } else {
-                saveData(); 
+                
+                calculateTotals();
+                saveData();
             }
         }
 
@@ -221,50 +295,62 @@
             saveData();
         }
 
-        // Kalkulasi dan sensor angka total 
+        // === 5. KALKULASI UTAMA & PENYIMPANAN ===
         function calculateTotals() {
             const goldGrams = parseFloat(document.getElementById('goldGrams').value) || 0;
             const goldTotal = goldGrams * GOLD_PRICE_PER_GRAM;
             document.getElementById('goldTotalDisplay').innerText = isVisible ? formatRupiah(goldTotal) : '••••••';
 
-            const reksaValue = parseFloat(document.getElementById('reksaValue').value) || 0;
-            document.getElementById('reksaTotalDisplay').innerText = isVisible ? formatRupiah(reksaValue) : '••••••';
+            const reksaModal = parseFloat(document.getElementById('reksaModal').value) || 0;
+            const reksaReturn = parseFloat(document.getElementById('reksaReturn').value) || 0;
+            const reksaTotal = reksaModal + reksaReturn;
+            document.getElementById('reksaTotalDisplay').innerText = isVisible ? formatRupiah(reksaTotal) : '••••••';
 
             const sahamTotal = stocks.reduce((sum, stock) => sum + ((stock.price || 0) * (stock.lot || 0) * 100), 0);
             document.getElementById('sahamTotalDisplay').innerText = isVisible ? formatRupiah(sahamTotal) : '••••••';
 
-            const netWorth = goldTotal + reksaValue + sahamTotal;
-            // Sensor khusus Total Kekayaan dengan digit titik yang lebih panjang
+            const netWorth = goldTotal + reksaTotal + sahamTotal;
             document.getElementById('netWorthDisplay').innerText = isVisible ? formatRupiah(netWorth) : '••••••••••';
-
-            saveData();
         }
 
         function saveData() {
             const data = {
                 title: document.getElementById('appTitle').value,
                 gold: document.getElementById('goldGrams').value,
-                reksa: document.getElementById('reksaValue').value,
+                reksaModal: document.getElementById('reksaModal').value,
+                reksaReturn: document.getElementById('reksaReturn').value,
+                reksaUpdateDate: reksaUpdateDateStr,
                 stocksData: stocks
             };
-            localStorage.setItem('investmentDataV6', JSON.stringify(data));
+            // Menggunakan Storage Key V7 karena arsitektur JSON berubah
+            localStorage.setItem('investmentDataV7', JSON.stringify(data));
         }
 
         function loadData() {
-            const savedData = localStorage.getItem('investmentDataV6');
+            const savedData = localStorage.getItem('investmentDataV7');
             if (savedData) {
                 const data = JSON.parse(savedData);
                 document.getElementById('appTitle').value = data.title || "Track Portfolio And Asset Updates";
-                document.getElementById('goldGrams').value = data.gold || 0;
-                document.getElementById('reksaValue').value = data.reksa || 0;
+                document.getElementById('goldGrams').value = data.gold || '';
+                document.getElementById('reksaModal').value = data.reksaModal || '';
+                document.getElementById('reksaReturn').value = data.reksaReturn || '';
                 
+                reksaUpdateDateStr = data.reksaUpdateDate || '';
+                if(reksaUpdateDateStr) {
+                    document.getElementById('reksaDateDisplay').innerText = `Return Update: ${reksaUpdateDateStr}`;
+                }
+
                 if(data.stocksData && Array.isArray(data.stocksData) && data.stocksData.length > 0) {
                     stocks = data.stocksData;
                 }
             }
             renderStocks(); 
+            
+            // Tarik harga emas terbaru dari Logamspot saat web dibuka
+            fetchLiveGoldPrice();
         }
 
+        // Trigger inisialisasi awal
         window.onload = loadData;
     </script>
 </body>
