@@ -61,7 +61,6 @@
         <!-- Net Worth Display -->
         <div class="mb-8">
             <div class="flex items-center gap-2 mb-1">
-                <!-- REVISI: Total Aset (IDR) -->
                 <p class="text-zinc-400 text-sm font-medium">Total Aset (IDR)</p>
                 <!-- Ikon Mata -->
                 <button onclick="toggleVisibility()" class="text-zinc-500 hover:text-zinc-200 transition-colors focus:outline-none" id="eyeIconContainer">
@@ -74,8 +73,8 @@
         <!-- ASSET CARDS -->
         <div class="space-y-6">
             
-            <!-- 1. Investasi Emas (Aksen Amber/Gold - Lebih elegan) -->
-            <div class="bg-gradient-to-br from-zinc-900 to-amber-900/30 p-5 rounded-2xl shadow-xl shadow-black/40 border border-amber-600/40">
+            <!-- 1. Investasi Emas (Warna dipertegas + Glow Emas) -->
+            <div class="bg-gradient-to-br from-zinc-900 to-amber-900/50 p-5 rounded-2xl shadow-xl shadow-amber-900/20 border border-amber-500/50">
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <h2 class="font-semibold text-lg text-zinc-100">Emas</h2>
@@ -94,8 +93,8 @@
                 </div>
             </div>
 
-            <!-- 2. Investasi Reksadana (Aksen Sky Blue - Lebih elegan) -->
-            <div class="bg-gradient-to-br from-zinc-900 to-sky-900/30 p-5 rounded-2xl shadow-xl shadow-black/40 border border-sky-600/40">
+            <!-- 2. Investasi Reksadana (Warna dipertegas + Glow Biru) -->
+            <div class="bg-gradient-to-br from-zinc-900 to-sky-900/50 p-5 rounded-2xl shadow-xl shadow-sky-900/20 border border-sky-500/50">
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <h2 class="font-semibold text-lg text-zinc-100">Reksadana Pasar Uang</h2>
@@ -128,8 +127,8 @@
                 </div>
             </div>
 
-            <!-- 3. Investasi Saham (Aksen Indigo - Lebih elegan) -->
-            <div class="bg-gradient-to-br from-zinc-900 to-indigo-900/30 p-5 rounded-2xl shadow-xl shadow-black/40 border border-indigo-600/40">
+            <!-- 3. Investasi Saham (Warna dipertegas + Glow Ungu/Indigo) -->
+            <div class="bg-gradient-to-br from-zinc-900 to-indigo-900/50 p-5 rounded-2xl shadow-xl shadow-indigo-900/20 border border-indigo-500/50">
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <h2 class="font-semibold text-lg text-zinc-100">Saham (IDX)</h2>
@@ -146,7 +145,7 @@
                 </div>
 
                 <!-- Tombol Tambah Saham -->
-                <button onclick="addStock()" class="mt-5 text-sm font-medium text-indigo-300 hover:text-white hover:bg-indigo-900/40 flex items-center w-full justify-center bg-zinc-950/60 py-3 rounded-xl border border-indigo-700/60 border-dashed transition-all">
+                <button onclick="addStock()" class="mt-5 text-sm font-medium text-indigo-300 hover:text-white hover:bg-indigo-900/60 flex items-center w-full justify-center bg-zinc-950/60 py-3 rounded-xl border border-indigo-500/60 border-dashed transition-all">
                     + Tambah Aset Saham
                 </button>
             </div>
@@ -333,7 +332,6 @@
                         </div>
                     </div>
                     
-                    <!-- Warna teks rupiah tetap putih -->
                     <div class="text-right text-sm font-semibold text-zinc-100 mt-1 drop-shadow-sm" id="stock-total-${stock.id}">
                         ${displayTotal}
                     </div>
@@ -377,60 +375,10 @@
             saveData();
         }
 
-        // === 5. KALKULASI & STORAGE UTAMA MENGGUNAKAN KEY V8 ===
+        // === 5. KALKULASI & STORAGE UTAMA ===
         function calculateTotals() {
             const goldGrams = parseFloat(document.getElementById('goldGrams').value) || 0;
             const goldTotal = goldGrams * GOLD_PRICE_PER_GRAM;
             document.getElementById('goldTotalDisplay').innerText = isVisible ? formatRupiah(goldTotal) : '••••••';
 
-            const reksaModal = parseFloat(document.getElementById('reksaModal').value) || 0;
-            const reksaReturn = parseFloat(document.getElementById('reksaReturn').value) || 0;
-            const reksaTotal = reksaModal + reksaReturn;
-            document.getElementById('reksaTotalDisplay').innerText = isVisible ? formatRupiah(reksaTotal) : '••••••';
-
-            const sahamTotal = stocks.reduce((sum, stock) => sum + ((stock.price || 0) * (stock.lot || 0) * 100), 0);
-            document.getElementById('sahamTotalDisplay').innerText = isVisible ? formatRupiah(sahamTotal) : '••••••';
-
-            const netWorth = goldTotal + reksaTotal + sahamTotal;
-            document.getElementById('netWorthDisplay').innerText = isVisible ? formatRupiah(netWorth) : '••••••••••';
-        }
-
-        function saveData() {
-            const data = {
-                title: document.getElementById('appTitle').value,
-                gold: document.getElementById('goldGrams').value,
-                reksaModal: document.getElementById('reksaModal').value,
-                reksaReturn: document.getElementById('reksaReturn').value,
-                reksaUpdateDate: reksaUpdateDateStr,
-                stocksData: stocks
-            };
-            localStorage.setItem('investmentDataV8', JSON.stringify(data));
-        }
-
-        function loadData() {
-            const savedData = localStorage.getItem('investmentDataV8');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                document.getElementById('appTitle').value = data.title || "Track Portfolio And Asset Updates";
-                document.getElementById('goldGrams').value = data.gold || '';
-                document.getElementById('reksaModal').value = data.reksaModal || '';
-                document.getElementById('reksaReturn').value = data.reksaReturn || '';
-                
-                reksaUpdateDateStr = data.reksaUpdateDate || '';
-                if(reksaUpdateDateStr) {
-                    document.getElementById('reksaDateDisplay').innerText = `Return Update: ${reksaUpdateDateStr}`;
-                }
-
-                if(data.stocksData && Array.isArray(data.stocksData) && data.stocksData.length > 0) {
-                    stocks = data.stocksData;
-                }
-            }
-            renderStocks(); 
-            fetchLiveGoldPrice();
-        }
-
-        // TRIGGER START
-        window.onload = checkSecurityPin;
-    </script>
-</body>
-</html>
+            const reksaModal = parseFloat(document.getElementById('re
