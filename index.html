@@ -20,29 +20,29 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex justify-center">
+<body class="bg-zinc-950 text-zinc-50 min-h-screen flex justify-center selection:bg-indigo-500/30">
     
     <!-- ==================== LAYAR KUNCI (PIN) ==================== -->
-    <div id="pinScreen" class="w-full max-w-md p-6 flex flex-col items-center justify-center min-h-screen z-50 bg-slate-900 absolute inset-0">
+    <div id="pinScreen" class="w-full max-w-md p-6 flex flex-col items-center justify-center min-h-screen z-50 bg-zinc-950/95 backdrop-blur-md absolute inset-0">
         
-        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-[320px] flex flex-col items-center text-center">
-            <div class="mb-6 bg-slate-900 p-4 rounded-full border border-slate-600">
-                <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-zinc-900 p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.8)] border border-zinc-800/60 w-full max-w-[320px] flex flex-col items-center text-center">
+            <div class="mb-6 bg-zinc-950 p-4 rounded-full border border-zinc-800 shadow-inner">
+                <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                 </svg>
             </div>
             
-            <h2 id="pinTitle" class="text-lg font-bold mb-2 text-slate-200">Verifikasi Keamanan</h2>
-            <p id="pinSubtitle" class="text-xs text-slate-400 mb-6">Masukkan PIN Anda</p>
+            <h2 id="pinTitle" class="text-lg font-bold mb-2 text-zinc-100">Verifikasi Keamanan</h2>
+            <p id="pinSubtitle" class="text-xs text-zinc-400 mb-6">Masukkan PIN Anda</p>
             
             <!-- Menggunakan inputmode numeric untuk memunculkan numpad di HP -->
             <input type="password" id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" 
-                class="pin-input bg-slate-900 border border-slate-600 text-white text-2xl rounded-xl p-3 w-3/4 outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition"
+                class="pin-input bg-zinc-950 border border-zinc-700 text-zinc-100 text-2xl rounded-xl p-3 w-3/4 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
                 placeholder="••••">
             
-            <p id="pinError" class="text-red-400 text-xs mt-3 h-4"></p>
+            <p id="pinError" class="text-rose-500 text-xs mt-3 h-4"></p>
             
-            <button id="pinBtn" class="mt-4 w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition">
+            <button id="pinBtn" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium tracking-wide py-3 rounded-xl transition-all shadow-lg shadow-indigo-900/20">
                 Masuk
             </button>
         </div>
@@ -55,73 +55,73 @@
         <!-- Header & Title -->
         <div class="mb-8 mt-4">
             <input type="text" id="appTitle" value="Track Portfolio And Asset Updates" 
-                class="bg-transparent text-2xl font-semibold w-full outline-none focus:border-b border-slate-500 pb-1"
+                class="bg-transparent text-2xl font-semibold w-full outline-none focus:border-b border-zinc-600 pb-1 text-zinc-100"
                 onchange="saveData()">
         </div>
 
         <!-- Net Worth Display -->
         <div class="mb-8">
             <div class="flex items-center gap-2 mb-1">
-                <p class="text-slate-400 text-sm font-medium">Net Worth (IDR)</p>
+                <p class="text-zinc-400 text-sm font-medium">Net Worth (IDR)</p>
                 <!-- Ikon Mata -->
-                <button onclick="toggleVisibility()" class="text-slate-400 hover:text-white transition focus:outline-none" id="eyeIconContainer">
+                <button onclick="toggleVisibility()" class="text-zinc-500 hover:text-zinc-200 transition-colors focus:outline-none" id="eyeIconContainer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 </button>
             </div>
-            <h1 class="text-4xl font-bold tracking-tight text-white" id="netWorthDisplay">0</h1>
+            <h1 class="text-4xl font-bold tracking-tight text-white drop-shadow-sm" id="netWorthDisplay">0</h1>
         </div>
 
         <!-- ASSET CARDS -->
-        <div class="space-y-4">
+        <div class="space-y-5">
             
             <!-- 1. Investasi Emas -->
-            <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
+            <div class="bg-zinc-900 p-5 rounded-2xl shadow-xl shadow-black/40 border border-zinc-800/60">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        <h2 class="font-semibold text-lg">Investasi Emas</h2>
-                        <p class="text-[11px] text-emerald-300 mt-1" id="goldPriceLabel">Mengambil harga Logamspot...</p>
+                        <h2 class="font-semibold text-lg text-zinc-100">Investasi Emas</h2>
+                        <p class="text-[11px] text-zinc-400 mt-1" id="goldPriceLabel">Mengambil harga Logamspot...</p>
                     </div>
                     <div class="text-right">
-                        <h3 class="font-bold text-lg text-emerald-400" id="goldTotalDisplay">0</h3>
+                        <h3 class="font-bold text-lg text-amber-400 drop-shadow-sm" id="goldTotalDisplay">0</h3>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center bg-slate-900 rounded-lg p-2 border border-slate-700">
-                    <span class="text-sm text-slate-400 px-2">Total Gram:</span>
+                <div class="mt-4 flex items-center bg-zinc-950 rounded-xl p-2.5 border border-zinc-800 shadow-inner">
+                    <span class="text-sm text-zinc-400 px-2 font-medium">Total Gram:</span>
                     <input type="number" id="goldGrams" value="0" step="0.01" onfocus="this.select()"
-                        class="bg-transparent text-right w-full outline-none font-semibold text-white"
+                        class="bg-transparent text-right w-full outline-none font-semibold text-zinc-100"
                         oninput="calculateTotals(); saveData();">
-                    <span class="text-sm text-slate-400 px-2">gr</span>
+                    <span class="text-sm text-zinc-500 px-2">gr</span>
                 </div>
             </div>
 
             <!-- 2. Investasi Reksadana -->
-            <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
+            <div class="bg-zinc-900 p-5 rounded-2xl shadow-xl shadow-black/40 border border-zinc-800/60">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        <h2 class="font-semibold text-lg">Reksadana Pasar Uang</h2>
-                        <p class="text-[11px] text-slate-400 mt-1" id="reksaDateDisplay">Return Update: -</p>
+                        <h2 class="font-semibold text-lg text-zinc-100">Reksadana Pasar Uang</h2>
+                        <p class="text-[11px] text-zinc-400 mt-1" id="reksaDateDisplay">Return Update: -</p>
                     </div>
                     <div class="text-right">
-                        <h3 class="font-bold text-lg text-blue-400" id="reksaTotalDisplay">0</h3>
+                        <h3 class="font-bold text-lg text-sky-400 drop-shadow-sm" id="reksaTotalDisplay">0</h3>
                     </div>
                 </div>
                 <!-- Pemisahan Modal dan Return -->
                 <div class="mt-4 flex gap-3">
-                    <div class="flex-1 bg-slate-900 rounded-lg p-2 border border-slate-700">
-                        <label class="block text-[10px] text-slate-500 mb-1 px-1">Modal Investasi</label>
+                    <div class="flex-1 bg-zinc-950 rounded-xl p-2.5 border border-zinc-800 shadow-inner">
+                        <label class="block text-[10px] font-medium text-zinc-500 mb-1 px-1">Modal Investasi</label>
                         <div class="flex items-center">
-                            <span class="text-sm text-slate-500 px-1">Rp</span>
+                            <span class="text-sm text-zinc-500 px-1">Rp</span>
                             <input type="number" id="reksaModal" value="0" onfocus="this.select()"
-                                class="bg-transparent text-right w-full outline-none font-semibold text-white"
+                                class="bg-transparent text-right w-full outline-none font-semibold text-zinc-100"
                                 oninput="calculateTotals(); saveData();">
                         </div>
                     </div>
-                    <div class="flex-1 bg-slate-900 rounded-lg p-2 border border-slate-700">
-                        <label class="block text-[10px] text-slate-500 mb-1 px-1">Return (+ / -)</label>
+                    <div class="flex-1 bg-zinc-950 rounded-xl p-2.5 border border-zinc-800 shadow-inner">
+                        <label class="block text-[10px] font-medium text-zinc-500 mb-1 px-1">Return (+ / -)</label>
                         <div class="flex items-center">
-                            <span class="text-sm text-slate-500 px-1">Rp</span>
+                            <span class="text-sm text-zinc-500 px-1">Rp</span>
                             <input type="number" id="reksaReturn" value="0" onfocus="this.select()"
-                                class="bg-transparent text-right w-full outline-none font-semibold text-blue-300"
+                                class="bg-transparent text-right w-full outline-none font-semibold text-sky-300"
                                 oninput="updateReksaDate()">
                         </div>
                     </div>
@@ -129,14 +129,14 @@
             </div>
 
             <!-- 3. Investasi Saham -->
-            <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
+            <div class="bg-zinc-900 p-5 rounded-2xl shadow-xl shadow-black/40 border border-zinc-800/60">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <h2 class="font-semibold text-lg">Investasi Saham (IDX)</h2>
-                        <p class="text-[11px] text-slate-400 mt-1">1 Lot = 100 Lembar</p>
+                        <h2 class="font-semibold text-lg text-zinc-100">Investasi Saham (IDX)</h2>
+                        <p class="text-[11px] text-zinc-400 mt-1">1 Lot = 100 Lembar</p>
                     </div>
                     <div class="text-right">
-                        <h3 class="font-bold text-lg text-purple-400" id="sahamTotalDisplay">0</h3>
+                        <h3 class="font-bold text-lg text-indigo-400 drop-shadow-sm" id="sahamTotalDisplay">0</h3>
                     </div>
                 </div>
                 
@@ -146,7 +146,7 @@
                 </div>
 
                 <!-- Tombol Tambah Saham -->
-                <button onclick="addStock()" class="mt-4 text-sm font-medium text-purple-400 hover:text-purple-300 flex items-center w-full justify-center bg-slate-900 py-2 rounded-lg border border-slate-700 border-dashed transition">
+                <button onclick="addStock()" class="mt-5 text-sm font-medium text-indigo-400 hover:text-indigo-300 hover:bg-zinc-800/50 flex items-center w-full justify-center bg-zinc-950 py-3 rounded-xl border border-zinc-700 border-dashed transition-all">
                     + Tambah Aset Saham
                 </button>
             </div>
@@ -165,7 +165,6 @@
             const pinBtn = document.getElementById('pinBtn');
             const pinError = document.getElementById('pinError');
 
-            // Tambahkan event listener Enter untuk input PIN
             pinInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
@@ -174,7 +173,6 @@
             });
 
             if (savedPin) {
-                // Skenario 1: PIN Sudah Ada
                 pinTitle.innerText = "Masukkan PIN";
                 pinSubtitle.innerText = "Sistem terkunci demi privasi Anda";
                 pinBtn.innerText = "Buka Kunci";
@@ -184,11 +182,10 @@
                         unlockApp();
                     } else {
                         pinError.innerText = "PIN Salah! Coba lagi.";
-                        pinInput.value = ''; // Kosongkan field
+                        pinInput.value = ''; 
                     }
                 };
             } else {
-                // Skenario 2: Belum Pernah Buat PIN
                 pinTitle.innerText = "Buat PIN Baru";
                 pinSubtitle.innerText = "Tentukan 4 digit angka untuk mengunci aset";
                 pinBtn.innerText = "Simpan PIN & Masuk";
@@ -204,14 +201,11 @@
             }
         }
 
-        // Buka Kunci Aplikasi
         function unlockApp() {
             document.getElementById('pinScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            // Mulai muat data aset setelah kunci terbuka
             loadData();
         }
-
 
         // === VARIABEL GLOBAL ASET ===
         let GOLD_PRICE_PER_GRAM = 2445000; 
@@ -292,7 +286,7 @@
                 const displayTotal = isVisible ? `Rp ${formatRupiah(totalRupiah)}` : '••••••';
 
                 const div = document.createElement('div');
-                div.className = 'bg-slate-900 rounded-xl p-3 border border-slate-700';
+                div.className = 'bg-zinc-950 rounded-xl p-3 border border-zinc-800/60 shadow-inner';
                 div.id = `stock-card-${stock.id}`;
                 
                 div.innerHTML = `
@@ -301,30 +295,30 @@
                             oninput="updateStockName(${stock.id}, this.value)" 
                             onfocus="this.select()"
                             placeholder="KODE"
-                            class="bg-transparent font-bold text-slate-200 uppercase w-24 outline-none border-b border-slate-600 focus:border-purple-400">
-                        <button onclick="removeStock(${stock.id})" class="text-slate-500 hover:text-red-400 text-lg font-bold px-2">&times;</button>
+                            class="bg-transparent font-bold text-zinc-200 uppercase w-24 outline-none border-b border-zinc-700 focus:border-indigo-500 transition-colors">
+                        <button onclick="removeStock(${stock.id})" class="text-zinc-600 hover:text-rose-500 text-lg font-bold px-2 transition-colors">&times;</button>
                     </div>
                     
                     <div class="flex gap-3 mb-2">
                         <div class="flex-1">
-                            <label class="block text-[10px] text-slate-500 mb-1">Harga/Lembar (Rp)</label>
+                            <label class="block text-[10px] text-zinc-500 mb-1">Harga/Lembar (Rp)</label>
                             <input type="${inputType}" value="${stock.price === 0 ? '' : stock.price}" 
                                 oninput="updateStockData(${stock.id}, 'price', this.value)" 
                                 onfocus="this.select()"
                                 placeholder="0"
-                                class="w-full bg-slate-800 rounded p-1.5 text-sm text-right text-white outline-none focus:ring-1 focus:ring-slate-500">
+                                class="w-full bg-zinc-900 rounded-lg p-1.5 text-sm text-right text-zinc-100 outline-none border border-transparent focus:border-zinc-700 transition-colors">
                         </div>
                         <div class="w-20">
-                            <label class="block text-[10px] text-slate-500 mb-1">Jml Lot</label>
+                            <label class="block text-[10px] text-zinc-500 mb-1">Jml Lot</label>
                             <input type="${inputType}" value="${stock.lot === 0 ? '' : stock.lot}" 
                                 oninput="updateStockData(${stock.id}, 'lot', this.value)" 
                                 onfocus="this.select()"
                                 placeholder="0"
-                                class="w-full bg-slate-800 rounded p-1.5 text-sm text-right text-white outline-none focus:ring-1 focus:ring-slate-500">
+                                class="w-full bg-zinc-900 rounded-lg p-1.5 text-sm text-right text-zinc-100 outline-none border border-transparent focus:border-zinc-700 transition-colors">
                         </div>
                     </div>
                     
-                    <div class="text-right text-sm font-semibold text-purple-300 mt-1" id="stock-total-${stock.id}">
+                    <div class="text-right text-sm font-semibold text-indigo-400 mt-1 drop-shadow-sm" id="stock-total-${stock.id}">
                         ${displayTotal}
                     </div>
                 `;
@@ -419,7 +413,7 @@
             fetchLiveGoldPrice();
         }
 
-        // TRIGGER START: Cek PIN terlebih dahulu, JANGAN load data sebelum PIN beres
+        // TRIGGER START
         window.onload = checkSecurityPin;
     </script>
 </body>
